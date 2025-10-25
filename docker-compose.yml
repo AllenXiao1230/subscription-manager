@@ -1,0 +1,53 @@
+# ./docker-compose.yml
+
+services:
+  # 1. 資料庫服務
+  db:
+    image: postgres:15-alpine
+    container_name: sub_db
+    restart: always
+    environment:
+      POSTGRES_DB: subscriptions_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: your_strong_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 映射 init.sql 腳本到 Docker 啟動目錄
+      - ./db_init:/docker-entrypoint-initdb.d
+    networks:
+      - sub-network
+
+  # 2. 後端服務
+  backend:
+    build: ./backend
+    container_name: sub_backend
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: your_strong_password
+      DB_NAME: subscriptions_db
+    depends_on:
+      - db
+    networks:
+      - sub-network
+
+  # 3. 前端服務
+  frontend:
+    build: ./frontend
+    container_name: sub_frontend
+    restart: always
+    ports:
+      - "3478:80" # 您將透過 http://localhost:3478 訪問
+    depends_on:
+      - backend
+    networks:
+      - sub-network
+
+networks:
+  sub-network:
+    driver: bridge
+
+volumes:
+  pgdata:
