@@ -3,9 +3,13 @@ const { spawn } = require('child_process');
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+const fs = require('fs');         // (NEW) 用於刪除暫存檔
+const multer = require('multer'); // (NEW) 用於處理上傳
 
 const app = express();
 const port = 3000;
+
+const upload = multer({ dest: '/tmp/uploads/' });
 
 app.use(cors());
 app.use(express.json());
@@ -303,6 +307,49 @@ app.get('/api/export', (req, res) => {
   pg_dump.on('error', (err) => {
     console.error('Failed to spawn pg_dump:', err);
     if (!res.headersSent) res.status(500).send('Export failed');
+  });
+});
+
+// (IMPORT) 匯入資料庫 SQL
+// 'backup_file' 必須與前端 FormData 的欄位名稱一致
+app.post('/api/import', upload.single('backup_file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  console.log(`Starting import from file: ${req.file.path}`);
+
+  // 設定環境變數 (密碼)
+  const env = { ...process.env, PGPASSWORD: process.env.DB_PASSWORD };
+
+  // 執行 psql 指令
+  const psql = spawn('psql', [
+    '-h', process.env.DB_HOST,
+    '-U', process.env.DB_USER,
+    '-d', process.env.DB_NAME,
+    // '-f' 參數讓 psql 直接讀取檔案
+    '-f', req.file.path
+  ], { env });
+
+  // 監聽執行結果
+  psql.on('close', (code) => {
+    // 無論成功失敗，都刪除暫存的上傳檔案
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error('Failed to delete temp file:', err);
+    });
+
+    if (code === 0) {
+      console.log('Database import successful');
+      res.json({ message: 'Import successful' });
+    } else {
+      console.error(`psql exited with code ${code}`);
+      res.status(500).json({ error: 'Import failed' });
+    }
+  });
+
+  // 捕捉錯誤輸出
+  psql.stderr.on('data', (data) => {
+    console.error(`psql error: ${data}`);
   });
 });
 

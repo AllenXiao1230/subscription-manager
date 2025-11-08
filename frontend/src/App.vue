@@ -16,6 +16,8 @@ const showMembersModal = ref(false)
 const showAddModal = ref(false) 
 const selectedSubscription = ref(null) 
 
+const fileInput = ref(null)
+
 const currentYear = new Date().getFullYear() 
 const selectedYear = ref(currentYear) 
 const availableYears = computed(() => {
@@ -53,6 +55,46 @@ async function fetchAllMembers() {
 
 function handleExportDB() {
   window.location.href = '/api/export';
+}
+
+// (*** NEW: 匯入相關函數 ***)
+// 1. 觸發隱藏的檔案選擇器
+function triggerImport() {
+  if (!confirm('警告：匯入將會「覆蓋」目前所有的資料！您確定要繼續嗎？')) return;
+  fileInput.value.click();
+}
+
+// 2. 當使用者選好檔案後執行
+async function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // 建立 FormData 來上傳檔案
+  const formData = new FormData();
+  formData.append('backup_file', file);
+
+  loading.value = true; // 顯示載入中
+
+  try {
+    const response = await fetch('/api/import', {
+      method: 'POST',
+      body: formData, // 瀏覽器會自動設定正確的 Content-Type (multipart/form-data)
+    });
+
+    if (!response.ok) throw new Error('匯入失敗');
+
+    alert('資料庫匯入成功！');
+    // 匯入完成後，重新整理所有資料
+    await fetchSubscriptions();
+    await fetchAllMembers();
+
+  } catch (error) {
+    console.error(error);
+    alert('匯入失敗，請檢查檔案是否正確。');
+  } finally {
+    loading.value = false;
+    event.target.value = ''; // 清空檔案選擇器，允許重複選擇同個檔案
+  }
 }
 
 function openEditModal(subscription) {
@@ -99,6 +141,11 @@ function handleSubscriptionAdded() {
       <h1>我的訂閱管理</h1>
       
       <div class="header-actions">
+        <button @click="triggerImport" class="import-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <span>匯入資料庫</span>
+        </button>
+
         <button @click="handleExportDB" class="export-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           <span>匯出資料庫</span>
@@ -141,6 +188,13 @@ function handleSubscriptionAdded() {
         @subscription-deleted="handleSubscriptionDeleted"
       />
     </div>
+    <input
+      type="file"
+      ref="fileInput"
+      accept=".sql"
+      style="display: none"
+      @change="handleImportFile"
+    />
 
     <AddSubscriptionModal
       :show="showAddModal"
@@ -382,6 +436,26 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
 .export-btn:hover {
   background-color: var(--color-accent);
   color: white;
+}
+/* 在 .export-btn 附近加入 import-btn 樣式 */
+.import-btn {
+  background-color: #3F3F46; /* 深灰色背景 */
+  border: 1px solid #52525B;
+  color: var(--color-text-primary);
+}
+.import-btn:hover {
+  background-color: #52525B;
+  border-color: #71717A;
+}
+
+/* 修改 header-actions 讓按鈕間距一致 */
+.header-actions {
+  display: flex;
+  gap: 0.75rem; /* 稍微縮小間距 */
+}
+/* 讓所有 header 按鈕有相同的基礎 padding */
+.header-actions button {
+   padding: 10px 14px;
 }
 
 /* 響應式：平板與桌面 (大於 768px) */
