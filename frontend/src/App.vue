@@ -433,12 +433,20 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
 .header-actions button {
   display: flex;
   align-items: center;
-  padding: 10px 14px; /* 維持舒適的點擊範圍 */
-  height: 42px;       /* 固定高度，避免動畫時高度跳動 */
+  justify-content: center; /* (關鍵) 新增這行：讓內容水平置中 */
+  padding: 10px;           /* (修改) 統一 padding，讓正方形時更對稱 */
+  width: 42px;             /* (新增) 預設寬度 = 高度，形成正方形 */
+  height: 42px;            /* 固定高度 */
   font-weight: 500;
-  border-radius: 8px; /* 確保有圓角 */
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease; /* 讓按鈕本身的背景色/邊框變化也有動畫 */
+  transition: all 0.3s ease; /* 包含 width 的變化 */
+}
+
+/* (關鍵) 懸停時，讓按鈕寬度變為 auto 以容納文字 */
+.header-actions button:hover {
+  width: auto;             /* (新增) 懸停時自動擴展寬度 */
+  padding: 10px 14px;      /* (新增) 懸停時恢復左右較寬的 padding */
 }
 
 /* (關鍵) 文字標籤的動畫設定 */
