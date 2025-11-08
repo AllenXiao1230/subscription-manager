@@ -426,26 +426,34 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
 /* (*** 已加入：按鈕群組與匯出按鈕樣式 ***) */
 .header-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
 }
-.export-btn {
-  background-color: transparent;
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent);
+.header-actions button {
+   padding: 10px 14px; /* 確保三個按鈕的 padding 一致 */
+   font-weight: 500;   /* 讓文字稍微細一點 */
 }
-.export-btn:hover {
-  background-color: var(--color-accent);
-  color: white;
-}
-/* 在 .export-btn 附近加入 import-btn 樣式 */
+
+/* 匯入按鈕 */
 .import-btn {
-  background-color: #3F3F46; /* 深灰色背景 */
-  border: 1px solid #52525B;
-  color: var(--color-text-primary);
+  background-color: var(--color-card); /* 使用卡片背景色 */
+  border: 1px solid var(--color-border); /* 使用邊框色 */
+  color: var(--color-text-secondary); /* 使用次要文字色 */
 }
 .import-btn:hover {
-  background-color: #52525B;
-  border-color: #71717A;
+  background-color: #313134; /* 懸停時稍微深一點 */
+  border-color: #52525B;
+  color: var(--color-text-primary); /* 懸停時文字變亮 */
+}
+
+/* 匯出按鈕 */
+.export-btn {
+  background-color: transparent; /* 透明背景 */
+  border: 1px solid var(--color-accent); /* 青色邊框 */
+  color: var(--color-accent); /* 青色文字 */
+}
+.export-btn:hover {
+  background-color: var(--color-accent); /* 懸停時變實心青色 */
+  color: white;
 }
 
 /* 修改 header-actions 讓按鈕間距一致 */
