@@ -12,6 +12,8 @@ COPY package*.json ./
 # 安裝依賴
 RUN npm install
 
+RUN apk add --no-cache postgresql-client
+
 # 複製所有後端程式碼
 COPY ./src ./src
 

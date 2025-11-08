@@ -17,6 +17,8 @@ const emit = defineEmits(['editSub', 'editMembers', 'subscriptionDeleted'])
 const members = ref([])
 const payments = ref([])
 const loading = ref(true)
+// (*** 1. 新增編輯模式狀態 ***)
+const isEditingPayments = ref(false)
 
 const timeColumns = computed(() => {
   const months = [];
@@ -63,20 +65,15 @@ async function fetchDetails() {
 watch(() => props.subscription, () => {
 }, { deep: true });
 
-// (*** (REQUEST) 修改 togglePayment ***)
 async function togglePayment(member, monthId) {
+  // (*** 2. 如果沒有在編輯模式，直接結束函數 ***)
+  if (!isEditingPayments.value) return;
+
   const key = `${member.id}-${monthId}`;
   const isPaid = paymentLookup.value.has(key);
   
-  // (*** (REMOVED) ***)
-  // (檢查未來月份的 if 判斷式已被移除)
-  // const todayPeriod = new Date().toISOString().substring(0, 7);
-  // if (monthId > todayPeriod) { ... }
-  // (*** (REMOVED) ***)
-
   try {
     if (isPaid) {
-      // --- 取消付款 (DELETE) ---
       await fetch('/api/payments', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -87,7 +84,6 @@ async function togglePayment(member, monthId) {
         })
       });
     } else {
-      // --- 登記付款 (POST) ---
       await fetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,17 +139,23 @@ defineExpose({
       </div>
       
       <div class="edit-buttons">
+        <button 
+          @click="isEditingPayments = !isEditingPayments" 
+          :class="['btn-toggle-edit', { 'is-active': isEditingPayments }]"
+        >
+           <svg v-if="!isEditingPayments" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+           <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+          <span>{{ isEditingPayments ? '完成繳款' : '編輯繳款' }}</span>
+        </button>
+        
         <button @click="emit('editSub', subscription)" class="btn-edit">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          <span>編輯資訊</span>
-        </button>
+          </button>
         <button @click="emit('editMembers', subscription)" class="btn-members">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          <span>編輯成員</span>
         </button>
         <button @click="deleteSubscription" class="btn-delete">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-          <span>刪除</span>
         </button>
       </div>
     </div>
@@ -176,10 +178,12 @@ defineExpose({
             <td 
               v-for="month in timeColumns" 
               :key="month.id" 
-              class="status-cell"
+              :class="['status-cell', { 'is-editable': isEditingPayments }]"
               @click="togglePayment(member, month.id)"
             >
-              {{ getPaymentStatus(member.id, month.id) }}
+              <span :style="{ opacity: isEditingPayments ? 1 : 0.5 }">
+                {{ getPaymentStatus(member.id, month.id) }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -189,7 +193,6 @@ defineExpose({
 </template>
 
 <style scoped>
-/* (Style 內容無變動) */
 .subscription-card {
   margin-bottom: 2rem;
   overflow: hidden;
@@ -229,21 +232,29 @@ defineExpose({
 .edit-buttons {
   display: flex;
   flex-direction: row; 
-  gap: 0.75rem;
+  gap: 0.5rem; /* 稍微縮小間距以容納更多按鈕 */
   flex-shrink: 0; 
+  align-items: center;
 }
 
 .edit-buttons button {
   background-color: #3F3F46; 
   color: var(--color-text-primary);
   border: 1px solid #52525B;
-  padding: 8px 14px;
+  padding: 8px 12px;
   font-size: 0.9rem;
   font-weight: 500;
 }
 .edit-buttons button:hover {
   background-color: #52525B;
   border-color: #71717A;
+}
+
+/* (*** 6. 編輯繳款按鈕的特殊樣式 ***) */
+.btn-toggle-edit.is-active {
+  background-color: var(--color-accent) !important; /* 激活時變色 */
+  border-color: var(--color-accent) !important;
+  color: white !important;
 }
 
 .btn-delete, .btn-delete:hover {
@@ -280,10 +291,19 @@ defineExpose({
   text-align: center;
 }
 
+/* (*** 7. 狀態儲存格樣式修改 ***) */
 .status-cell {
   font-size: 1.2rem;
-  cursor: pointer;
+  cursor: default; /* 預設不可點擊 */
   user-select: none;
   border-radius: 4px;
+  transition: background-color 0.2s;
+}
+/* 只有在編輯模式下，才顯示為可點擊，並有 hover 效果 */
+.status-cell.is-editable {
+  cursor: pointer;
+}
+.status-cell.is-editable:hover {
+   background-color: #404040 !important; /* 只有編輯時才有 hover 背景 */
 }
 </style>

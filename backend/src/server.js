@@ -1,5 +1,5 @@
 // ./backend/src/server.js
-
+const { spawn } = require('child_process');
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
@@ -276,7 +276,38 @@ app.delete('/api/payments', async (req, res) => {
   }
 });
 
+app.get('/api/export', (req, res) => {
+  // 設定回應標頭，告訴瀏覽器這是一個要下載的檔案
+  const filename = `backup_${new Date().toISOString().slice(0, 10)}.sql`;
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  // 設定 pg_dump 需要的環境變數 (密碼必須透過環境變數傳遞)
+  const env = { ...process.env, PGPASSWORD: process.env.DB_PASSWORD };
+
+  // 執行 pg_dump 指令
+  const pg_dump = spawn('pg_dump', [
+    '-h', process.env.DB_HOST,
+    '-U', process.env.DB_USER,
+    '-d', process.env.DB_NAME,
+    '--clean' // 加入 DROP TABLE 指令，方便還原
+  ], { env });
+
+  // 將 pg_dump 的輸出直接 "串流" (pipe) 到 HTTP 回應中
+  pg_dump.stdout.pipe(res);
+
+  // 錯誤處理
+  pg_dump.stderr.on('data', (data) => {
+    console.error(`pg_dump error: ${data}`);
+  });
+  pg_dump.on('error', (err) => {
+    console.error('Failed to spawn pg_dump:', err);
+    if (!res.headersSent) res.status(500).send('Export failed');
+  });
+});
+
 // 啟動伺服器
 app.listen(port, '0.0.0.0', () => {
   console.log(`後端伺服器正在 http://localhost:${port} 運行`);
 });
+
