@@ -423,52 +423,62 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
   font-size: 2rem;
 }
 
-/* --- (NEW) 標題區按鈕群組 --- */
+/* --- 標題區按鈕群組 --- */
 .header-actions {
   display: flex;
   gap: 0.75rem;
 }
 
-/* 按鈕通用設定 (包含動畫基礎) */
+/* 按鈕通用設定 */
 .header-actions button {
   display: flex;
   align-items: center;
-  justify-content: center; /* (關鍵) 新增這行：讓內容水平置中 */
-  padding: 10px;           /* (修改) 統一 padding，讓正方形時更對稱 */
-  width: 42px;             /* (新增) 預設寬度 = 高度，形成正方形 */
+  justify-content: center; /* 確保圖示置中 */
+  padding: 0;              /* (關鍵) 預設不給 padding */
+  width: 42px;             /* 固定寬度 = 高度 -> 正方形 */
   height: 42px;            /* 固定高度 */
-  font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease; /* 包含 width 的變化 */
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 使用更平滑的貝茲曲線 */
+  overflow: hidden;        /* 隱藏超出的內容 */
 }
 
-/* (關鍵) 懸停時，讓按鈕寬度變為 auto 以容納文字 */
+/* 懸停狀態：按鈕變寬 */
 .header-actions button:hover {
-  width: auto;             /* (新增) 懸停時自動擴展寬度 */
-  padding: 10px 14px;      /* (新增) 懸停時恢復左右較寬的 padding */
+  width: auto;             /* 寬度自動擴展 */
+  padding: 0 14px;         /* 給予左右內距 */
+  min-width: 100px;        /* (可選) 設定一個最小寬度，讓展開更一致 */
+  justify-content: flex-start; /* 內容靠左對齊 (因為有文字了) */
 }
 
-/* (關鍵) 文字標籤的動畫設定 */
+/* 圖示設定 (確保它不會被壓縮) */
+.header-actions button svg {
+  flex-shrink: 0;          /* 防止圖示在動畫過程中變形 */
+  min-width: 20px;         /* 確保圖示佔據固定空間 */
+  min-height: 20px;
+}
+
+/* 文字標籤設定 */
 .header-actions button span {
-  max-width: 0;                /* 預設寬度為 0 (隱藏) */
-  opacity: 0;                  /* 預設透明 */
-  white-space: nowrap;         /* 防止文字換行 */
-  overflow: hidden;            /* 隱藏超出的文字 */
-  transition: all 0.3s ease;   /* 動畫設定：0.3秒平滑切換 */
+  opacity: 0;              /* 預設透明 */
+  max-width: 0;            /* 預設寬度 0 */
+  white-space: nowrap;
+  margin-left: 0;          /* 預設無邊距 */
+  transform: translateX(10px); /* (特效) 預設文字在右側一點點 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* (關鍵) 懸停時顯示文字 */
+/* 懸停時顯示文字 */
 .header-actions button:hover span {
-  max-width: 100px;    /* 給予足夠的寬度讓文字顯示 */
-  opacity: 1;          /* 變為不透明 */
-  margin-left: 8px;    /* 文字與圖示之間的間距 (只在顯示時才加) */
+  opacity: 1;
+  max-width: 150px;        /* 給予足夠空間 */
+  margin-left: 8px;        /* 加入間距 */
+  transform: translateX(0); /* 文字滑入歸位 */
 }
 
 
-/* --- 個別按鈕顏色設定 (維持上一版的統一性設計) --- */
-
-/* 匯入按鈕 */
+/* --- 個別按鈕顏色 (保持不變) --- */
 .import-btn {
   background-color: var(--color-card);
   border: 1px solid var(--color-border);
@@ -480,7 +490,6 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
   color: var(--color-text-primary);
 }
 
-/* 匯出按鈕 */
 .export-btn {
   background-color: transparent;
   border: 1px solid var(--color-accent);
@@ -491,7 +500,15 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
   color: white;
 }
 
-
+/* (新增按鈕使用預設樣式，但需要微調以配合上面的新規則) */
+.add-main-btn {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+}
+.add-main-btn:hover {
+  background-color: var(--color-accent-hover);
+}
 
 
 /* 響應式：平板與桌面 (大於 768px) */
