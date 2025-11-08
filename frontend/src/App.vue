@@ -423,48 +423,68 @@ hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-border); }
   font-size: 2rem;
 }
 
-/* (*** 已加入：按鈕群組與匯出按鈕樣式 ***) */
+/* --- (NEW) 標題區按鈕群組 --- */
 .header-actions {
   display: flex;
   gap: 0.75rem;
 }
+
+/* 按鈕通用設定 (包含動畫基礎) */
 .header-actions button {
-   padding: 10px 14px; /* 確保三個按鈕的 padding 一致 */
-   font-weight: 500;   /* 讓文字稍微細一點 */
+  display: flex;
+  align-items: center;
+  padding: 10px 14px; /* 維持舒適的點擊範圍 */
+  height: 42px;       /* 固定高度，避免動畫時高度跳動 */
+  font-weight: 500;
+  border-radius: 8px; /* 確保有圓角 */
+  cursor: pointer;
+  transition: all 0.3s ease; /* 讓按鈕本身的背景色/邊框變化也有動畫 */
 }
+
+/* (關鍵) 文字標籤的動畫設定 */
+.header-actions button span {
+  max-width: 0;                /* 預設寬度為 0 (隱藏) */
+  opacity: 0;                  /* 預設透明 */
+  white-space: nowrap;         /* 防止文字換行 */
+  overflow: hidden;            /* 隱藏超出的文字 */
+  transition: all 0.3s ease;   /* 動畫設定：0.3秒平滑切換 */
+}
+
+/* (關鍵) 懸停時顯示文字 */
+.header-actions button:hover span {
+  max-width: 100px;    /* 給予足夠的寬度讓文字顯示 */
+  opacity: 1;          /* 變為不透明 */
+  margin-left: 8px;    /* 文字與圖示之間的間距 (只在顯示時才加) */
+}
+
+
+/* --- 個別按鈕顏色設定 (維持上一版的統一性設計) --- */
 
 /* 匯入按鈕 */
 .import-btn {
-  background-color: var(--color-card); /* 使用卡片背景色 */
-  border: 1px solid var(--color-border); /* 使用邊框色 */
-  color: var(--color-text-secondary); /* 使用次要文字色 */
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 .import-btn:hover {
-  background-color: #313134; /* 懸停時稍微深一點 */
+  background-color: #313134;
   border-color: #52525B;
-  color: var(--color-text-primary); /* 懸停時文字變亮 */
+  color: var(--color-text-primary);
 }
 
 /* 匯出按鈕 */
 .export-btn {
-  background-color: transparent; /* 透明背景 */
-  border: 1px solid var(--color-accent); /* 青色邊框 */
-  color: var(--color-accent); /* 青色文字 */
+  background-color: transparent;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
 }
 .export-btn:hover {
-  background-color: var(--color-accent); /* 懸停時變實心青色 */
+  background-color: var(--color-accent);
   color: white;
 }
 
-/* 修改 header-actions 讓按鈕間距一致 */
-.header-actions {
-  display: flex;
-  gap: 0.75rem; /* 稍微縮小間距 */
-}
-/* 讓所有 header 按鈕有相同的基礎 padding */
-.header-actions button {
-   padding: 10px 14px;
-}
+
+
 
 /* 響應式：平板與桌面 (大於 768px) */
 @media (min-width: 768px) {
